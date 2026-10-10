@@ -22,8 +22,8 @@ defineStories('Rich editor', [
       input.hidden = true;
       document.body.append(input);
       const editor = createEditor(input);
-      editor.setTextWithEntities('Telegram');
-      editor.restoreSelection({from: 1, to: 9}, false);
+      editor.setTextWithEntities('Soneta');
+      editor.restoreSelection({from: 1, to: 7}, false);
       const cleanup = () => {
         editor.destroy();
         input.remove();

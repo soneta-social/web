@@ -19,6 +19,7 @@ import DeferredIsUsingPasscode from '@lib/passcode/deferredIsUsingPasscode';
 import EncryptionKeyStore from '@lib/passcode/keyStore';
 import pause from '@helpers/schedulers/pause';
 import {getWindowClients} from '@helpers/context';
+import rebrandBranding from '@helpers/string/rebrandBranding';
 
 const ctx = self as any as ServiceWorkerGlobalScope;
 const defaultBaseUrl = location.protocol + '//' + location.hostname + location.pathname.split('/').slice(0, -1).join('/') + '/';
@@ -129,7 +130,7 @@ const defaults: PushStorage = {
   push_mute_until: 0,
   push_lang: {
     push_message_nopreview: 'You have a new message',
-    push_message_error: 'Telegram is syncing in the background...',
+    push_message_error: 'Soneta is syncing in the background...',
     push_action_mute1d: 'Mute for 24H',
     push_action_settings: 'Settings'
   },
@@ -194,7 +195,7 @@ async function handlePushNotificationObject(obj: PushNotificationObject) {
     }
 
     const tag = 'fix';
-    const notificationPromise = ctx.registration.showNotification('Telegram Web', {
+    const notificationPromise = ctx.registration.showNotification('Soneta', {
       body: _lang.push_message_error,
       icon: NOTIFICATION_ICON_PATH,
       tag,
@@ -424,7 +425,7 @@ function fireNotification(
 ) {
   obj = fillPushObject(obj);
   const peerId = obj.custom.peerId;
-  let title = obj.title || 'Telegram';
+  let title = rebrandBranding(obj.title) || 'Soneta';
   let body = obj.description || '';
   let tag = 'peer' + peerId;
 
@@ -437,7 +438,7 @@ function fireNotification(
   }
 
   if(settings?.nopreview || !obj.loc_key) {
-    title = 'Telegram';
+    title = 'Soneta';
     body = lang.push_message_nopreview;
     tag = 'unknown_peer';
   }

@@ -38,7 +38,7 @@ defineStories('Premium & Stars', [
   },
   {
     id: 'premium/boarding',
-    title: 'Telegram Premium',
+    title: 'Soneta Premium',
     open: async(ctx) => {
       const {default: showPremiumPopup} = await import('@components/popups/premium');
       showPremiumPopup();
@@ -46,7 +46,7 @@ defineStories('Premium & Stars', [
   },
   {
     id: 'premium/feature',
-    title: 'Telegram Premium — one feature',
+    title: 'Soneta Premium — one feature',
     open: async(ctx) => {
       const {default: showPremiumPopup} = await import('@components/popups/premium');
       showPremiumPopup({feature: 'stories'});

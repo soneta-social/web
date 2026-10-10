@@ -101,7 +101,7 @@ defineStories('SIGN IN', [
   },
   {
     id: 'auth/codeApp',
-    title: 'Code sent in Telegram',
+    title: 'Code sent in Soneta',
     surface,
     fixtureOnly: true,
     managers,

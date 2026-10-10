@@ -2,6 +2,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const {getInvalidPluralKeys} = require('./lib/validatePluralStrings.ts');
+const {rebrandBranding} = require('../helpers/string/rebrandBranding.ts');
 
 const onResponse = (response) => {
   let data = '';
@@ -42,7 +43,7 @@ const onResponse = (response) => {
         }
   
         const key = match[1];
-        const value = match[2].replace(/'/g, `\\'`).replace(/\\"/g, '"');
+        const value = rebrandBranding(match[2].replace(/'/g, `\\'`).replace(/\\"/g, '"'));
         if(key.includes('_') && ignore.has(key.split('_').pop())) {
           const splitted = key.split('_');
           const k = splitted.shift();

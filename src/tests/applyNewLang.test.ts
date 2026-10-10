@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {runInNewContext} from 'node:vm';
 import {getInvalidPluralKeys} from '@/scripts/lib/validatePluralStrings';
+import rebrandBranding from '@/helpers/string/rebrandBranding';
 
 const source = readFileSync('src/scripts/apply_new_lang.js', 'utf8');
 
@@ -33,7 +34,8 @@ function createImport() {
     },
     fs: {readFileSync: (file: string) => files[path.basename(file) as keyof typeof files], writeFileSync},
     path,
-    './lib/validatePluralStrings.ts': {getInvalidPluralKeys}
+    './lib/validatePluralStrings.ts': {getInvalidPluralKeys},
+    '../helpers/string/rebrandBranding.ts': {rebrandBranding}
   };
   runInNewContext(source, {
     __dirname: path.resolve('src/scripts'),
@@ -78,5 +80,13 @@ describe('translation import', () => {
     expect(writeFileSync).toHaveBeenCalledTimes(2);
     expect(files['lang.ts']).toContain('%2$s bought %1$d gifts');
     expect(files['langSign.ts']).toContain('\'Greeting\': \'Welcome\'');
+  });
+
+  it('rebrands Telegram mentions in imported values but keeps their links', () => {
+    const {apply, files} = createImport();
+
+    apply('"Greeting" = "Telegram Web is unavailable, see telegram.org and t.me/TelegramTips";');
+
+    expect(files['langSign.ts']).toContain('\'Greeting\': \'Soneta is unavailable, see telegram.org and t.me/TelegramTips\'');
   });
 });

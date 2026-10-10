@@ -16,7 +16,7 @@ const titles: Record<string, RegExp> = {
   'messages-income': /3 messages/i,
   'live-message': /Live stream messages.*2/,
   'live-reaction': /^Live stream reaction$/,
-  premium: /Telegram Premium.*12 months/,
+  premium: /Soneta Premium.*12 months/,
   search: /^Post search fee$/,
   api: /Paid broadcast.*123 messages/,
   'affiliate-income': /Affiliate commission.*12.5%/,

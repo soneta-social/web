@@ -9,6 +9,7 @@ import {IS_MOBILE} from '@environment/userAgent';
 import deepEqual from '@helpers/object/deepEqual';
 import safeAssign from '@helpers/object/safeAssign';
 import capitalizeFirstLetter from '@helpers/string/capitalizeFirstLetter';
+import rebrandBranding from '@helpers/string/rebrandBranding';
 import matchUrlProtocol from '@lib/richTextProcessor/matchUrlProtocol';
 import wrapUrl from '@lib/richTextProcessor/wrapUrl';
 import {setDirection} from '@helpers/dom/setInnerHTML';
@@ -261,6 +262,19 @@ namespace I18n {
     }
   })();
 
+  function rebrandLangPackString(string: LangPackString) {
+    if(string._ === 'langPackString') {
+      string.value = rebrandBranding(string.value);
+    } else if(string._ === 'langPackStringPluralized') {
+      for(const key in string) {
+        if(key.endsWith('_value')) {
+          // @ts-ignore
+          string[key] = rebrandBranding(string[key]);
+        }
+      }
+    }
+  }
+
   export function applyLangPack(langPack: LangPackDifference) {
     const currentLangCode = lastRequestedLangCode;
     if(langPack.lang_code !== currentLangCode) {
@@ -284,6 +298,7 @@ namespace I18n {
     strings.clear();
 
     for(const string of langPack.strings) {
+      rebrandLangPackString(string);
       strings.set(string.key as LangPackKey, string);
     }
 

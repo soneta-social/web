@@ -243,8 +243,8 @@ export const webPage: WebPage.webPage = {
   display_url: 'telegram.org',
   hash: 0,
   type: 'telegram_channel',
-  site_name: 'Telegram',
-  title: 'Telegram Messenger',
+  site_name: 'Soneta',
+  title: 'Soneta Messenger',
   description: 'Fast. Secure. Powerful.'
 };
 
