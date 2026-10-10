@@ -48,7 +48,7 @@ describe('rich message posting choice', () => {
     expect(dependencies.showPremium).toHaveBeenCalledOnce();
     expect(lang['RichMessage.PremiumRequired.Title']).toBe('Remove Formatting?');
     expect(lang['RichMessage.PremiumRequired.Text']).toBe(
-      'This message uses rich formatting, which requires Telegram Premium.'
+      'This message uses rich formatting, which requires Soneta Premium.'
     );
     expect(lang['RichMessage.SubscribeToPremium']).toBe('Subscribe to Premium');
   });
