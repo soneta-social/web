@@ -1,0 +1,2 @@
+import{j as e}from"./solid-WnanT5kq.js";import{n as t}from"./superTabProvider-CQH6s1_o.js";var n=(n,r)=>()=>{let[i]=t();return e(()=>{i.container.classList.add(`privacy-tab`,n),r(i)}),null};export{n as t};
+//# sourceMappingURL=privacyTab-E_Ce4WUZ.js.map
