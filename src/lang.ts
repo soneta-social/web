@@ -1987,6 +1987,7 @@ const lang = {
   },
   'HidAccount': 'The account was hidden by the user',
   'TelegramFeatures': 'Soneta Features',
+  'SonetaMiniApp': 'Soneta Mini App',
   'SetColor': 'Set a color',
   'Open': 'Open',
   'OpenUrlTitle': 'Open Link',

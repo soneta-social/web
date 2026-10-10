@@ -726,6 +726,13 @@ export class AppSidebarLeft extends SidebarSlider {
         return totalAccounts < MAX_ACCOUNTS;
       }
     }, newSubmenu, {
+      icon: 'apps',
+      text: 'SonetaMiniApp',
+      onClick: () => {
+        appImManager.openUrl('https://t.me/frenscoin_bot/join');
+      },
+      separator: true
+    }, {
       icon: 'savedmessages',
       text: 'SavedMessages',
       onClick: () => {
@@ -734,8 +741,7 @@ export class AppSidebarLeft extends SidebarSlider {
             peerId: appImManager.myId
           });
         }, 0);
-      },
-      separator: true
+      }
     }, btnArchive, {
       icon: 'stories',
       text: 'MyStories.Title',
