@@ -1,10 +1,12 @@
-## Telegram Web K
-Based on Webogram, patched and improved. Available for everyone here: https://web.telegram.org/k/
+# Soneta Web
 
+Soneta is a fast and secure messaging app with a focus on security and speed. This repository contains its web client, which talks to Telegram servers directly over MTProto — no third-party API wrappers in between.
+
+The client is based on [Telegram Web K](https://github.com/morethanwords/tweb) by Eduard Kuzmenko (which itself originates from Webogram), rebranded and developed further as Soneta.
 
 ### Developing
 Install dependencies with:
-```lang=bash
+```bash
 pnpm install
 ```
 This will install all the needed dependencies.
@@ -17,14 +19,14 @@ Open http://localhost:8080/ in your browser.
 
 #### Running in production
 
-Run `node build` to build the minimized production version of the app. Copy `public` folder contents to your web server.
+Run `pnpm build` to build the minimized production version of the app into the `dist` folder. Copy its contents to your web server, or serve it right away with `node server.js --dist`.
 
 ### Running in docker
 
-#### Developing: 
+#### Developing:
 * Install dependencies `docker-compose up tweb.dependencies`.
-* Run develop container `docker-compose up tweb.develop `.
-* Open http://localhost:8080/ in your browser. 
+* Run develop container `docker-compose up tweb.develop`.
+* Open http://localhost:8080/ in your browser.
 
 #### Production:
 * Run `docker-compose up tweb.production -d` nginx image and container to serve the build
@@ -58,6 +60,8 @@ Source maps are included in production build for your convenience.
 * **debug=1**: to enable additional logging
 * **noSharedWorker=1**: to disable Shared Worker, can be useful for debugging
 * **http=1**: to force the use of HTTPS transport when connecting to Telegram servers
+* **pfs=1**: to use temporary auth keys (Perfect Forward Secrecy), off by default
+* **a11y=1**: to enable the keyboard and screen-reader accessibility layer, off by default
 
 Should be applied like that: http://localhost:8080/?test=1
 
@@ -69,8 +73,10 @@ You can see all the available svg icons by calling the `showIconLibrary()` globa
 
 ### Troubleshooting & Suggesting
 
-If you find an issue with this app or wish something to be added, let Telegram know using the [Suggestions Platform](https://bugs.telegram.org/c/4002).
+If you find an issue with this app or wish something to be added, let the developers know in the [Soneta dev group](https://t.me/soneta_devs). Code-level bugs and pull requests are also welcome in the [repository issues](https://github.com/soneta-social/web/issues).
 
 ### Licensing
 
 The source code is licensed under GPL v3. License is available [here](/LICENSE).
+
+It is based on [Telegram Web K](https://github.com/morethanwords/tweb) by Eduard Kuzmenko, licensed under GPL v3 as well.
