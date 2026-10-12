@@ -82,11 +82,11 @@ describe('translation import', () => {
     expect(files['langSign.ts']).toContain('\'Greeting\': \'Welcome\'');
   });
 
-  it('rebrands Telegram mentions in imported values but keeps their links', () => {
+  it('rebrands Telegram mentions and promo links in imported values', () => {
     const {apply, files} = createImport();
 
     apply('"Greeting" = "Telegram Web is unavailable, see telegram.org and t.me/TelegramTips";');
 
-    expect(files['langSign.ts']).toContain('\'Greeting\': \'Soneta is unavailable, see telegram.org and t.me/TelegramTips\'');
+    expect(files['langSign.ts']).toContain('\'Greeting\': \'Soneta is unavailable, see telegram.org and t.me/thesoneta\'');
   });
 });
