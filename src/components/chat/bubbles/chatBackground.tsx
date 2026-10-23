@@ -559,6 +559,7 @@ export const ChatBackground: Component<ChatBackgroundProps> = (props) => {
  */
 const appChatBackground = (() => {
   const element = document.createElement('div');
+  element.classList.add('app-chat-background');
   element.setAttribute('aria-hidden', 'true');
 
   // Solid signal driving the embedded `<ChatBackground>` props.

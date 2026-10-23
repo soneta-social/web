@@ -2,7 +2,6 @@ import {onCleanup, onMount} from 'solid-js';
 
 import Button from '@components/buttonTsx';
 import LanguageChangeButton from '@components/languageChangeButton';
-import PasskeyLoginButton from '@components/passkeyLoginButton';
 import {putPreloader} from '@components/putPreloader';
 import MediaHeader from '@components/mediaHeader';
 import mediaHeaderStyles from '@components/mediaHeader.module.scss';
@@ -245,7 +244,6 @@ export default function SignQRCard(_props: {spec: Spec}) {
         text="Login.QR.Cancel"
       />
       {getCurrentAccount() === 1 && <LanguageChangeButton />}
-      <PasskeyLoginButton />
     </AuthCard>
   );
 }

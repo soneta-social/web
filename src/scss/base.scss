@@ -459,7 +459,15 @@ body {
   transition: background-color 0.2s;
 }
 
+// Sign-in screens sit on the plain card colour instead of the chat wallpaper;
+// bootstrapIm drops the class once the chat list takes over.
+body.has-auth-pages {
+  background-color: var(--surface-color);
 
+  > .app-chat-background {
+    visibility: hidden;
+  }
+}
 
 body.deactivated {
   animation: grayscale-in var(--transition-standard-in) forwards;

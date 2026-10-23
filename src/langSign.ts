@@ -72,6 +72,15 @@ const lang = {
   'Login.QR.Help3': 'Point your phone at this screen to confirm login',
   'Login.QR.Cancel': 'Log in by phone number >',
   'Login.QR.Login': 'Log in by QR Code >',
+  'Login.Footer.About': 'About',
+  'Login.Footer.GetApp': 'Get App',
+  'Login.Footer.News': 'News',
+  'Login.Footer.Terms': 'Terms',
+  'Login.Footer.Privacy': 'Privacy',
+  'Login.Footer.Developers': 'Developers',
+  'Login.Footer.SourceCode': 'Source code',
+  'Login.Footer.Issues': 'Report a bug',
+  'Login.Footer.Copyright': '© %s Soneta',
   'Login.QR.Subtitle': 'Scan with Soneta app on your phone',
   // the link target stays empty on purpose: tweb's formatter takes the anchor from the arguments
   // for `[]()`, while a `%1$@` inside the target makes it start looking at argument 1 and crash

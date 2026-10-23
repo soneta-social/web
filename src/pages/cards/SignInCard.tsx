@@ -3,7 +3,6 @@ import {createSignal, JSX, onCleanup, onMount} from 'solid-js';
 import Button from '@components/buttonTsx';
 import CountryInputField from '@components/countryInputField';
 import LanguageChangeButton from '@components/languageChangeButton';
-import PasskeyLoginButton from '@components/passkeyLoginButton';
 import MediaHeader from '@components/mediaHeader';
 import TelInputField from '@components/telInputField';
 import IS_TOUCH_SUPPORTED from '@environment/touchSupport';
@@ -32,8 +31,8 @@ type Spec = Extract<CardSpec, {name: 'signIn'}>;
 /**
  * Card variant of `pageSignIn`. Country picker + tel input → `auth.sendCode` →
  * branches to authCode (default), pageIm (rare authorization-on-send case),
- * password (passkey path). Also exposes a QR-login button and the passkey
- * button. On mount kicks off `tryAgain()` — a DC pre-warming cascade — that's
+ * password (passkey path). Also exposes a QR-login button.
+ * On mount kicks off `tryAgain()` — a DC pre-warming cascade — that's
  * cancelled on unmount via a local `cancelled` flag.
  */
 export default function SignInCard(_props: {spec: Spec}) {
@@ -263,7 +262,6 @@ export default function SignInCard(_props: {spec: Spec}) {
         onClick={() => navigate({name: 'signQR'})}
         text="Login.QR.Login"
       />
-      <PasskeyLoginButton disabled={submitting()} />
     </AuthCard>
   );
 }

@@ -27,6 +27,7 @@ import {
 import styles from '@/pages/authFlow.module.scss';
 import {bootstrapIm} from '@/pages/bootstrapIm';
 import Button from '@components/buttonTsx';
+import AuthFooter from '@/pages/AuthFooter';
 
 if(import.meta.hot) import.meta.hot.accept();
 
@@ -161,6 +162,14 @@ export default function AuthCardsHost(): JSX.Element {
           <Button.Icon icon="back" class={styles.closeButton} onClick={back} aria-label={I18n.format('StarsRating.Back', true)} />
         )}
         <Button.Icon icon="darkmode_filled" class={styles.themeButton} onClick={toggleTheme} aria-label={I18n.format('DarkMode', true)} />
+        {!showBackButton && (
+          <svg class={styles.cornerLogo} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" aria-hidden="true">
+            <use href="#logo"/>
+          </svg>
+        )}
+        <div class={styles.hero}>
+          <img class={styles.heroImage} src="assets/img/auth-hero.webp" alt="" draggable={false} />
+        </div>
         <Scrollable
           ref={scrollableEl}
           class={classNames(
@@ -173,6 +182,7 @@ export default function AuthCardsHost(): JSX.Element {
             <CardsTransition />
           </div>
           <div class={styles.placeholder} />
+          <AuthFooter />
         </Scrollable>
       </main>
     </AuthFlowContext.Provider>

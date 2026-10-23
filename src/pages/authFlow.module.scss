@@ -68,6 +68,13 @@ $corner-button-size: 2.5rem;
     opacity: 0;
     pointer-events: none;
   }
+
+  // The side image, the corner logo and the footer go at once, with no fade.
+  .hero,
+  .cornerLogo,
+  .footer {
+    display: none;
+  }
 }
 
 // `<Scrollable>` wrapper. The opacity transition is used for the fade-in
@@ -363,4 +370,106 @@ $corner-button-size: 2.5rem;
 .cardExitTo {
   opacity: 0;
   transform: translateX(-24px);
+}
+
+// ----- Footer (see AuthFooter.tsx) ----------------------------------
+
+// Link row under the active card, pushed to the bottom by `.placeholder`.
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem 0;
+  padding: .75rem 1rem;
+  font-size: .8125rem;
+  line-height: 1.5rem;
+  color: var(--secondary-text-color);
+}
+
+.footerItem {
+  display: flex;
+  align-items: center;
+
+  // The separator belongs to the item, so it never dangles at the end of a row.
+  &::after {
+    content: "·";
+    padding: 0 .25rem;
+    color: var(--light-secondary-text-color);
+    user-select: none;
+  }
+
+  &:last-child::after {
+    content: none;
+  }
+}
+
+.footerLink {
+  color: inherit;
+  text-decoration: none;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ----- Desktop side image -------------------------------------------
+
+// Left half of the screen next to the card. Hidden below the breakpoint, where
+// the card takes the whole width.
+.hero {
+  display: none;
+}
+
+// The sign-in card's own logo lives in the page corner instead, opposite the
+// theme button, on every screen size.
+.cornerLogo {
+  position: fixed;
+  top: $corner-button-inset;
+  left: $corner-button-inset;
+  width: $corner-button-size * 1.25;
+  height: $corner-button-size * 1.25;
+  fill: var(--primary-color);
+  z-index: 100;
+}
+
+.host .logoContainer {
+  display: none;
+}
+
+@media only screen and (min-width: 1000px) {
+  .hero {
+    position: absolute;
+    inset: 0 50% 0 0;
+    display: flex;
+    align-items: center;
+    // Pushed against the card's half, so the two read as one composition.
+    justify-content: flex-end;
+    pointer-events: none;
+  }
+
+  .heroImage {
+    width: min(48rem, 100%);
+    max-height: 100%;
+    object-fit: contain;
+    // The artwork carries transparent margins of its own; pull them into the gap.
+    margin-inline-end: -3rem;
+  }
+
+  // The card column moves to the right half. `.scrollable` is `position:
+  // relative` here, so it is pushed by the margin rather than by an inset.
+  .host .scrollable {
+    margin: 0 0 0 auto;
+    width: 50%;
+    // Room for the fixed footer, so a short window does not tuck the card under it.
+    padding-bottom: 3rem;
+  }
+
+  // The footer is centred on the whole screen, not in the card's half.
+  .footer {
+    position: fixed;
+    inset: auto 0 0;
+  }
 }
