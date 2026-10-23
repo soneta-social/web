@@ -1,0 +1,2 @@
+import{l as e}from"./encryptedStorageLayer-D0b8zXKc.js";import{b as t}from"./solid-WnanT5kq.js";import{_a as n}from"./buttonMenu-CwjPMS51.js";function r(r){let i=e(),a;return t(e=>{r.middleware.onClean(()=>{e(),i.resolve()}),a=new n({...r,multiSelect:!1,headerSearch:!0,placeholder:`SearchPlaceholder`,meAsSaved:!1,onFirstRender:()=>{i.resolve()}})}),{selector:a,loadPromise:i}}function i(e){return r({...e,peerType:[`channelParticipants`]})}export{r as n,i as t};
+//# sourceMappingURL=participantsSelector-O2SxIYiT.js.map

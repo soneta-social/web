@@ -1,2 +1,0 @@
-import{n as e,t}from"./peerTypeSection-D6hJLQa3.js";var n=e(e=>{e.scrollable.append(t(`video`,`AutoDownloadVideosTitle`,e.middlewareHelper.get()))});export{n as default};
-//# sourceMappingURL=video-wnJy6pj3.js.map
