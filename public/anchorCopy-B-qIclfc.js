@@ -1,2 +1,0 @@
-import{t as e}from"./cancelEvent-DOcVzRz1.js";import{n as t}from"./clickEvent-Cp2hlSFn.js";import{ua as n}from"./buttonMenu-CwjPMS51.js";import{r}from"./toast-B9qG4pGQ.js";var i=`https://t.me/`;function a(a={}){let o=document.createElement(`a`);o.classList.add(`anchor-copy`);let s,c=`LinkCopied`;return a.mePath&&(s=o.href=o.innerText=i+a.mePath),a.username&&(o.href=i+a.username,s=o.innerText=`@`+a.username,c=`UsernameCopied`),t(o,t=>{e(t),n(s??o.href),r({langPackKey:c})}),o}export{a as t};
-//# sourceMappingURL=anchorCopy-B-qIclfc.js.map
