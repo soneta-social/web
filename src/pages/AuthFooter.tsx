@@ -7,11 +7,11 @@ import styles from '@/pages/authFlow.module.scss';
 const REPOSITORY_URL = 'https://github.com/soneta-social/web';
 
 const LINKS: {text: LangPackKey, href: string}[] = [
-  {text: 'Login.Footer.About', href: 'https://soneta.social'},
-  {text: 'Login.Footer.GetApp', href: 'https://soneta.social/apps'},
+  {text: 'Login.Footer.About', href: 'https://about.soneta.co'},
+  {text: 'Login.Footer.GetApp', href: 'https://about.soneta.co/apps'},
   {text: 'Login.Footer.News', href: 'https://t.me/thesoneta'},
-  {text: 'Login.Footer.Terms', href: 'https://soneta.social/tos'},
-  {text: 'Login.Footer.Privacy', href: 'https://soneta.social/privacy'},
+  {text: 'Login.Footer.Terms', href: 'https://about.soneta.co/tos'},
+  {text: 'Login.Footer.Privacy', href: 'https://about.soneta.co/privacy'},
   {text: 'Login.Footer.Developers', href: 'https://t.me/soneta_devs'},
   {text: 'Login.Footer.SourceCode', href: REPOSITORY_URL},
   {text: 'Login.Footer.Issues', href: `${REPOSITORY_URL}/issues`}
