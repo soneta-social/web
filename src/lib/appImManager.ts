@@ -3333,6 +3333,16 @@ export class AppImManager extends EventListenerBase<{
     return chat;
   }
 
+  // Closes every open chat, as Escape would one by one: the stacked ones are
+  // dropped and the first one is emptied, which clears the URL hash too.
+  public closeAllChats() {
+    if(!this.chat?.peerId) return;
+
+    appNavigationController.removeByType('chat');
+    this.spliceChats(1, true, false);
+    return this.setPeer({}, false);
+  }
+
   private spliceChats(fromIndex: number, justReturn = true, animate?: boolean, spliced?: Chat[]) {
     if(fromIndex >= this.chats.length) return;
 

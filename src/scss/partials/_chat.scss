@@ -561,17 +561,17 @@
 	// gap a padding wider than the left; the extra + --page-chats-padding in the
 	// shift compensates so the chat sits symmetrically between the bar and the
 	// viewport edge. JS clamps --chat-width to the same space so it never spills
-	// past the edge. --folders-sidebar-offset (0 normally, 80px when folders
-	// panel is shown) is folded into the left side so chat content stays centered
-	// past the panel too.
+	// past the edge. --left-rail-offset (0 normally, the rail plus its gap when
+	// the folders panel or the social navigation is docked) is folded into the
+	// left side so chat content stays centered past the rail too.
 	@include respond-to(no-floating-left-sidebar) {
-		transform: translateX(calc((var(--folders-sidebar-offset) + var(--left-column-width) + var(--page-chats-padding)) / 2 * var(--reflect)));
+		transform: translateX(calc((var(--left-rail-offset) + var(--left-column-width) + var(--page-chats-padding)) / 2 * var(--reflect)));
 		transition: transform var(--transition-standard-out);
 	}
 
 	@include respond-to(no-floating-left-sidebar) {
 		body.is-right-column-shown:not(.right-column-floats) & {
-			transform: translateX(calc((var(--folders-sidebar-offset) + var(--left-column-width) - var(--right-column-width)) / 2 * var(--reflect)));
+			transform: translateX(calc((var(--left-rail-offset) + var(--left-column-width) - var(--right-column-width)) / 2 * var(--reflect)));
 			transition: transform var(--transition-standard-in);
 		}
 	}
@@ -1278,10 +1278,10 @@
     // area reaches the real edges — the page edge when the right column is
     // closed/floating, or the docked right column's inner edge when it's shown.
     @include respond-to(no-floating-left-sidebar) {
-      inset-inline: calc((var(--folders-sidebar-offset) + var(--left-column-width) - var(--page-chats-padding)) / 2);
+      inset-inline: calc((var(--left-rail-offset) + var(--left-column-width) - var(--page-chats-padding)) / 2);
 
       body.is-right-column-shown:not(.right-column-floats) & {
-        inset-inline: calc((var(--folders-sidebar-offset) + var(--left-column-width) + var(--right-column-width)) / 2);
+        inset-inline: calc((var(--left-rail-offset) + var(--left-column-width) + var(--right-column-width)) / 2);
       }
     }
   }

@@ -19,9 +19,11 @@
   box-shadow: var(--column-box-shadow);
   z-index: 1;
   margin-block: var(--page-chats-padding);
-  // --folders-sidebar-offset (0px or 5.5rem) sits side-by-side with the
-  // page padding so the column lands 8px past the folders panel when shown.
-  margin-inline-start: calc(var(--page-chats-padding) + var(--folders-sidebar-offset));
+  // --left-rail-offset (0px, or the docked rail plus its gap) sits
+  // side-by-side with the page padding so the column lands 8px past the
+  // folders panel / social navigation when shown. --left-column-center-shift
+  // moves it on to the centre while it shows a section in place of the chat.
+  margin-inline-start: calc(var(--page-chats-padding) + var(--left-rail-offset) + var(--left-column-center-shift));
 
   // Icon-only search affordance shown when the sidebar is collapsed and
   // there's no room for the full search input. Visibility is owned by JS —
@@ -89,7 +91,7 @@
   }
 
   @include respond-to(no-floating-left-sidebar) {
-    body.has-folders-sidebar & {
+    body.has-left-rail & {
       .item-main {
         --stories-additional-offset: -47px;
       }
@@ -147,18 +149,18 @@
 
     // Burger in collapsed mode.
     //
-    // With folders sidebar: the burger and the search trigger occupy the
+    // With a left rail (folders sidebar or social navigation): the burger and the search trigger occupy the
     // exact same slot — opening search just swaps the icon. No
     // width-grow animation, no margin shift. Hidden via `display: none`
     // (rather than `width: 0`) so there's no layout state to animate
     // through, and the visible margin matches the trigger's `.75rem`
     // offset.
     //
-    // Without folders sidebar: the in-sidebar burger is the only menu
+    // Without a left rail: the in-sidebar burger is the only menu
     // trigger, so when the column is narrow and nothing is open inside
     // we float it at a fixed offset over the chatlist.
     .left-sidebar-burger {
-      body.has-folders-sidebar & {
+      body.has-left-rail & {
         &:not(.is-visible) {
           display: none;
         }
@@ -169,7 +171,7 @@
       }
     }
 
-    body:not(.has-folders-sidebar) & .left-sidebar-burger {
+    body:not(.has-left-rail) & .left-sidebar-burger {
       margin-inline-start: .75rem;
     }
 
@@ -201,7 +203,7 @@
     }
 
     &.can-menu-have-z-index:not(.has-open-tabs) {
-      body:not(.has-folders-sidebar) & {
+      body:not(.has-left-rail) & {
         .left-sidebar-burger {
           z-index: 4;
         }
@@ -209,7 +211,7 @@
     }
 
     &.force-hide-menu {
-      body:not(.has-folders-sidebar) & {
+      body:not(.has-left-rail) & {
         .btn-menu {
           display: none;
         }
@@ -257,7 +259,7 @@
     }
 
     &.has-forum-open {
-      body.has-folders-sidebar & {
+      body.has-left-rail & {
         .main-search-sidebar-header {
           pointer-events: none;
           opacity: 0;
@@ -595,7 +597,7 @@
     justify-content: center;
 
     @include respond-to(no-floating-left-sidebar) {
-      body.has-folders-sidebar & {
+      body.has-left-rail & {
         width: 0;
         opacity: 0;
         overflow: hidden;
@@ -687,6 +689,37 @@
       display: inline-flex;
       margin-inline-start: 1rem;
     }
+  }
+}
+
+// A section of the social navigation (contacts, calls, settings…) shown in
+// place of the chat — `body.has-center-section`, owned by
+// stores/foldersSidebar.ts. #column-left sits centred (its width and shift
+// come from helpers/updateColumnWidths.ts) and the chat steps aside, the
+// profile column with it.
+body.has-center-section {
+  #column-left {
+    // a collapsed chat list keeps its tabs at the default width — fill the
+    // centred column instead
+    .item-main,
+    .item-secondary {
+      width: 100%;
+    }
+
+    .sidebar-resize-handle-left {
+      display: none;
+    }
+  }
+
+  #column-center,
+  #column-right {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  // nothing to dim behind the centred column
+  .sidebar-left-overlay {
+    display: none;
   }
 }
 

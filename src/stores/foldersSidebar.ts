@@ -1,6 +1,6 @@
 import {createEffect, createMemo, createRoot, createSignal} from 'solid-js';
 import {ScreenSize, useMediaSizes} from '@helpers/mediaSizes';
-import {setFoldersSidebarShown} from '@helpers/updateColumnWidths';
+import {setCenterSection, setLeftRail} from '@helpers/updateColumnWidths';
 
 // RAW user preference (mirrors settings.tabsInSidebar): whether the user has
 // the folders sidebar turned ON. Independent of viewport — it stays true even
@@ -17,20 +17,70 @@ export default function useHasFoldersSidebar() {
   return hasFoldersSidebarSignal;
 };
 
-// Derived: whether the folders sidebar is ACTUALLY visible — the RAW preference
-// AND a viewport wide enough to fit it (the panel is hidden by SCSS at <=925px).
-// This is what UI should key off of when it cares about the on-screen panel.
-// Also the single source for the `body.has-folders-sidebar` class and
-// updateColumnWidths' reserved-space math, so all three stay in sync.
-const foldersSidebarShownSignal = createRoot(() => {
-  const [hasFoldersSidebar] = hasFoldersSidebarSignal;
+// Whether the social navigation sidebar (components/socialNav) is on screen:
+// it docks to the left of #column-left whenever the viewport is wide enough
+// for a docked layout (>925px). Below that the messenger layout is unchanged.
+const socialNavShownSignal = createRoot(() => {
   const mediaSizes = useMediaSizes();
-  const shown = createMemo(() => hasFoldersSidebar() && !mediaSizes.isLessThanFloatingLeftSidebar);
+  const shown = createMemo(() => !mediaSizes.isLessThanFloatingLeftSidebar);
+  return [shown] as const;
+});
+
+export function useSocialNavShown() {
+  return socialNavShownSignal;
+}
+
+// The section of the social navigation the left sidebar shows: the chat list
+// (with or without its search open), or a tab opened from the navigation —
+// pushed in by AppSidebarLeft from its tab stack.
+export type SocialSection = 'messages' | 'search' | 'contacts' | 'calls' | 'stories' | 'settings';
+const CHAT_LIST_SECTIONS: Set<SocialSection> = new Set(['messages', 'search']);
+
+const socialSectionSignal = createRoot(() => {
+  const [section, setSection] = createSignal<SocialSection>('messages');
+  return [section, setSection] as const;
+});
+
+export function useSocialSection() {
+  return socialSectionSignal;
+}
+
+// Derived: whether #column-left moves to the centre of the page and shows the
+// current section in place of the chat. The chat list sections keep the
+// messenger layout, and so does every width without the social navigation.
+// The single source for the `body.has-center-section` class and
+// updateColumnWidths' centred-column math.
+const isCenterSectionSignal = createRoot(() => {
+  const [section] = socialSectionSignal;
+  const [socialNavShown] = socialNavShownSignal;
+  const isCenter = createMemo(() => socialNavShown() && !CHAT_LIST_SECTIONS.has(section()));
 
   createEffect(() => {
-    const visible = shown();
-    document.body.classList.toggle('has-folders-sidebar', visible);
-    setFoldersSidebarShown(visible);
+    document.body.classList.toggle('has-center-section', isCenter());
+    setCenterSection(isCenter());
+  });
+
+  return [isCenter] as const;
+});
+
+export function useIsCenterSection() {
+  return isCenterSectionSignal;
+}
+
+// Derived: whether the folders sidebar is ACTUALLY visible — the RAW preference
+// AND a viewport wide enough to fit it (the panel is hidden by SCSS at <=925px)
+// AND the social navigation not taking that slot (both dock in the same place;
+// while the navigation is shown folders render as horizontal tabs).
+// This is what UI should key off of when it cares about the on-screen panel.
+// Also the single source for the `body.has-folders-sidebar` class.
+const foldersSidebarShownSignal = createRoot(() => {
+  const [hasFoldersSidebar] = hasFoldersSidebarSignal;
+  const [socialNavShown] = socialNavShownSignal;
+  const mediaSizes = useMediaSizes();
+  const shown = createMemo(() => hasFoldersSidebar() && !mediaSizes.isLessThanFloatingLeftSidebar && !socialNavShown());
+
+  createEffect(() => {
+    document.body.classList.toggle('has-folders-sidebar', shown());
   });
 
   return [shown] as const;
@@ -38,6 +88,27 @@ const foldersSidebarShownSignal = createRoot(() => {
 
 export function useFoldersSidebarShown() {
   return foldersSidebarShownSignal;
+}
+
+// Derived: whether a rail docks to the left of #column-left — the folders
+// sidebar or the social navigation. Either one carries the main menu trigger,
+// so the in-sidebar burger steps aside. The single source for the
+// `body.has-left-rail` class and updateColumnWidths' reserved-space math.
+const leftRailShownSignal = createRoot(() => {
+  const [foldersSidebarShown] = foldersSidebarShownSignal;
+  const [socialNavShown] = socialNavShownSignal;
+  const shown = createMemo(() => foldersSidebarShown() || socialNavShown());
+
+  createEffect(() => {
+    document.body.classList.toggle('has-left-rail', shown());
+    setLeftRail(socialNavShown() ? 'social' : (foldersSidebarShown() ? 'folders' : undefined));
+  });
+
+  return [shown] as const;
+});
+
+export function useLeftRailShown() {
+  return leftRailShownSignal;
 }
 
 const hasFoldersSignal = createRoot(() => {

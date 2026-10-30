@@ -16,6 +16,12 @@
  *                                  sidebar visually grows to default but
  *                                  layout still reserves only 80 (overlays
  *                                  the chat).
+ *   --left-column-center-shift    how far #column-left moves right of its
+ *                                  docked place to sit centred in the
+ *                                  page while it shows a section of the
+ *                                  social navigation (contacts, calls,
+ *                                  settings…) in place of the chat; 0
+ *                                  otherwise.
  *   --right-column-width          right column rendered width (user
  *                                  preference, clamped to MIN/MAX); full vw
  *                                  on handhelds.
@@ -74,11 +80,20 @@ export const SIDEBAR_COLLAPSE_FACTOR = 0.65;
 // Width of #column-left when collapsed. Matches --sidebar-collapsed-width in
 // scss/partials/_leftSidebar.scss.
 export const SIDEBAR_COLLAPSED_WIDTH = 80;
-// Folders sidebar geometry. Owned by JS — written to `--folders-sidebar-width`
-// and `--folders-sidebar-offset` so SCSS only consumes the vars.
+// Left rail geometry (the folders sidebar or the social navigation, docked
+// left of #column-left). Owned by JS — written to `--folders-sidebar-width`,
+// `--social-nav-width` and `--left-rail-offset` so SCSS only consumes the vars.
 const FOLDERS_SIDEBAR_WIDTH = 72;
-const FOLDERS_SIDEBAR_GAP = 8;
-const FOLDERS_SIDEBAR_OFFSET = FOLDERS_SIDEBAR_WIDTH + FOLDERS_SIDEBAR_GAP;
+const LEFT_RAIL_GAP = 8;
+// The social navigation shows icons with labels from this viewport width on,
+// and icons only (as wide as the folders sidebar) below it — and also while
+// the chat list is the current section (the chat needs the room), or when the
+// user dragged it collapsed.
+const SOCIAL_NAV_WIDTH = 244;
+const SOCIAL_NAV_COMPACT_WIDTH = FOLDERS_SIDEBAR_WIDTH;
+const SOCIAL_NAV_WIDE_FROM = 1280;
+// Width of #column-left while it shows a section in place of the chat.
+const CENTER_SECTION_WIDTH = 600;
 
 // Outer page padding values, written into `--page-chats-padding` by JS in
 // two scopes (see below). The sidebar value collapses to 0 on handheld so
@@ -102,6 +117,7 @@ const RIGHT_SIDEBAR_FITS_EXTRA = 64;
 
 const STORAGE_KEY_LEFT = 'sidebar-left-width';
 const STORAGE_KEY_RIGHT = 'sidebar-right-width';
+const STORAGE_KEY_SOCIAL_NAV = 'social-nav-collapsed';
 
 // User-preferred widths for the docked sidebars. Persisted in localStorage.
 // `undefined` means "no preference, use DEFAULT_COLUMN_WIDTH". For the left
@@ -109,6 +125,7 @@ const STORAGE_KEY_RIGHT = 'sidebar-right-width';
 let userPreferredLeftWidth: number | undefined;
 let userPreferredLeftCollapsed = false;
 let userPreferredRightWidth: number | undefined;
+let userCollapsedSocialNav = false;
 
 // Transient state: when sidebar is collapsed but a tab is open (Settings
 // etc.), it pops out to the full width while the tab remains visible. The
@@ -116,10 +133,15 @@ let userPreferredRightWidth: number | undefined;
 // so JS only flips the steady-state flag.
 let openTabsLeftSidebar = false;
 
-// Whether the folders sidebar is actually visible (preference enabled AND
-// viewport wide enough). Mirrors `body.has-folders-sidebar`; pushed in by
-// stores/foldersSidebar.ts when the class is toggled.
-let foldersSidebarShown = false;
+// Which rail is docked left of #column-left, if any. Mirrors
+// `body.has-left-rail`; pushed in by stores/foldersSidebar.ts.
+type LeftRail = 'folders' | 'social';
+let leftRail: LeftRail | undefined;
+
+// Whether #column-left shows a section of the social navigation in place of
+// the chat (pushed in by stores/foldersSidebar.ts). Only while the social
+// navigation is docked.
+let centerSection = false;
 
 (function loadUserPreferences() {
   const rawLeft = localStorage.getItem(STORAGE_KEY_LEFT);
@@ -135,6 +157,7 @@ let foldersSidebarShown = false;
     const n = parseInt(rawRight);
     if(!isNaN(n)) userPreferredRightWidth = clamp(n, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
   }
+  userCollapsedSocialNav = localStorage.getItem(STORAGE_KEY_SOCIAL_NAV) === '1';
 })();
 
 const persistLeftPreference = throttle(() => {
@@ -192,14 +215,55 @@ export function setOpenTabsLeftSidebar(value: boolean): void {
 }
 
 /**
- * Mirror the folders sidebar visibility into the width math. Adds
- * FOLDERS_SIDEBAR_OFFSET to the docked-layout threshold so the right column
- * starts to float a bit sooner when the folders panel reserves space.
+ * Mirror the docked left rail into the width math. Its width plus a gap is
+ * reserved left of #column-left, and added to the docked-layout threshold so
+ * the right column starts to float a bit sooner.
  */
-export function setFoldersSidebarShown(value: boolean): void {
-  if(foldersSidebarShown === value) return;
-  foldersSidebarShown = value;
+export function setLeftRail(value: LeftRail | undefined): void {
+  if(leftRail === value) return;
+  leftRail = value;
   updateColumnWidths();
+}
+
+export function setCenterSection(value: boolean): void {
+  if(centerSection === value) return;
+  centerSection = value;
+  updateColumnWidths();
+}
+
+/**
+ * Called by the social navigation's resize handle. The navigation has no
+ * free width — the drag only flips it between wide and collapsed.
+ */
+export function setUserCollapsedSocialNav(collapsed: boolean): void {
+  if(userCollapsedSocialNav === collapsed) return;
+  userCollapsedSocialNav = collapsed;
+  localStorage.setItem(STORAGE_KEY_SOCIAL_NAV, collapsed ? '1' : '0');
+  updateColumnWidths();
+}
+
+// Below this width a drag on the social navigation's handle collapses it.
+export const SOCIAL_NAV_COLLAPSE_WIDTH = (SOCIAL_NAV_WIDTH + SOCIAL_NAV_COMPACT_WIDTH) / 2;
+
+function computeSocialNavWidth(): number {
+  const isCompact = getAppWindow().innerWidth < SOCIAL_NAV_WIDE_FROM ||
+    !centerSection ||
+    userCollapsedSocialNav;
+  return isCompact ? SOCIAL_NAV_COMPACT_WIDTH : SOCIAL_NAV_WIDTH;
+}
+
+// Width of the docked area right of the left rail, between the paddings.
+function computeCenterAreaWidth(): number {
+  return getAppWindow().innerWidth - computeLeftRailOffset() - PAGE_CHATS_PADDING * 2;
+}
+
+function isCenterSectionShown(): boolean {
+  return centerSection && leftRail === 'social' && !mediaSizes.isLessThanFloatingLeftSidebar;
+}
+
+function computeLeftRailOffset(): number {
+  if(!leftRail) return 0;
+  return (leftRail === 'social' ? computeSocialNavWidth() : FOLDERS_SIDEBAR_WIDTH) + LEFT_RAIL_GAP;
 }
 
 function computeVisualLeftWidth(): number {
@@ -213,6 +277,7 @@ function computeVisualLeftWidth(): number {
   if(isMobile) return vw;
   // 601-925px — drawer over the chat, fixed at default.
   if(isFloatingLeft) return defaultColumnWidth;
+  if(isCenterSectionShown()) return Math.min(CENTER_SECTION_WIDTH, computeCenterAreaWidth());
   // Collapsed AND no tabs open → narrow strip. Tabs-open swaps this to the
   // full width; the CSS transition on .is-collapsed animates the change.
   if(userPreferredLeftCollapsed && !openTabsLeftSidebar) return SIDEBAR_COLLAPSED_WIDTH;
@@ -232,6 +297,7 @@ function computeLayoutLeftWidth(): number {
 
   if(isMobile) return vw;
   if(isFloatingLeft) return defaultColumnWidth;
+  if(isCenterSectionShown()) return Math.min(CENTER_SECTION_WIDTH, computeCenterAreaWidth());
   if(userPreferredLeftCollapsed) return SIDEBAR_COLLAPSED_WIDTH;
   return userPreferredLeftWidth ?? defaultColumnWidth;
 }
@@ -249,7 +315,9 @@ const last = {
   middle: -1,
   defaultColumn: -1,
   foldersWidth: -1,
-  foldersOffset: -1,
+  socialNavWidth: -1,
+  leftRailOffset: -1,
+  centerShift: -1,
   chatWidth: -1,
   rightSidebarFits: -1,
   pageChatsPaddingRoot: -1,
@@ -285,9 +353,11 @@ export default function updateColumnWidths(): void {
   // Whether the right column can dock without overlapping the chat. The
   // threshold is the sum of every horizontal piece currently in the docked
   // layout, so resizing either column (or collapsing the left, or toggling
-  // the folders panel) immediately re-evaluates the floats decision.
-  const foldersOffset = foldersSidebarShown ? FOLDERS_SIDEBAR_OFFSET : 0;
-  const rightColumnFits = foldersOffset + layoutLeftWidth + rightWidth + CHAT_WIDTH_MAX + PAGE_CHATS_PADDING * 4;
+  // the left rail) immediately re-evaluates the floats decision.
+  const leftRailOffset = computeLeftRailOffset();
+  const socialNavWidth = computeSocialNavWidth();
+  const centerShift = isCenterSectionShown() ? Math.max(0, (computeCenterAreaWidth() - visualLeftWidth) / 2) : 0;
+  const rightColumnFits = leftRailOffset + layoutLeftWidth + rightWidth + CHAT_WIDTH_MAX + PAGE_CHATS_PADDING * 4;
   // Handheld is a slider — the right column overlays the chat, so it
   // always floats. Without this body.right-column-floats stays off and the
   // `.bubbles-inner { width: calc(100% - var(--right-column-width) ...) }`
@@ -298,7 +368,7 @@ export default function updateColumnWidths(): void {
   // Chat content max width — fills the viewport on handheld (single-column
   // slider) and caps at CHAT_WIDTH_MAX otherwise. It also never exceeds the
   // space actually free beside the left column: in the docked-left range
-  // (>925px) the left column + folders panel sit in-flow and the chat is
+  // (>925px) the left column + left rail sit in-flow and the chat is
   // centred in the gap to their right (see #column-center translateX in
   // _chat.scss). Subtract them plus 3 paddings — the page's left inset and the
   // two 16px gutters that flank the chat once it's clamped — so the chat keeps
@@ -310,7 +380,7 @@ export default function updateColumnWidths(): void {
   const isFloatingLeft = mediaSizes.isLessThanFloatingLeftSidebar && !isMobile;
   const chatAvailableWidth = (isMobile || isFloatingLeft) ?
     middleWidth :
-    availableWidth - foldersOffset - layoutLeftWidth - PAGE_CHATS_PADDING * 3;
+    availableWidth - leftRailOffset - layoutLeftWidth - PAGE_CHATS_PADDING * 3;
   const chatWidth = isMobile ? vw : Math.min(chatAvailableWidth, CHAT_WIDTH_MAX);
   // Viewport threshold at which the right column can dock at default size
   // without overlapping a CHAT_WIDTH_MAX chat. Exposed for any caller that
@@ -347,9 +417,18 @@ export default function updateColumnWidths(): void {
     root.style.setProperty('--folders-sidebar-width', FOLDERS_SIDEBAR_WIDTH + 'px');
     last.foldersWidth = FOLDERS_SIDEBAR_WIDTH;
   }
-  if(last.foldersOffset !== foldersOffset) {
-    root.style.setProperty('--folders-sidebar-offset', foldersOffset + 'px');
-    last.foldersOffset = foldersOffset;
+  if(last.socialNavWidth !== socialNavWidth) {
+    root.style.setProperty('--social-nav-width', socialNavWidth + 'px');
+    document.body.classList.toggle('social-nav-compact', socialNavWidth === SOCIAL_NAV_COMPACT_WIDTH);
+    last.socialNavWidth = socialNavWidth;
+  }
+  if(last.leftRailOffset !== leftRailOffset) {
+    root.style.setProperty('--left-rail-offset', leftRailOffset + 'px');
+    last.leftRailOffset = leftRailOffset;
+  }
+  if(last.centerShift !== centerShift) {
+    root.style.setProperty('--left-column-center-shift', centerShift + 'px');
+    last.centerShift = centerShift;
   }
   if(last.chatWidth !== chatWidth) {
     root.style.setProperty('--chat-width', chatWidth + 'px');

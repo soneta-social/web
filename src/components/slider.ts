@@ -137,9 +137,11 @@ export default class SidebarSlider {
       }, TRANSITION_TIME);
     }
 
+    // history first, so onTabsCountChange (fired by pushNavigationItem)
+    // already sees the tab being opened
+    this.historyTabIds.push(id);
     this.pushNavigationItem(tab);
 
-    this.historyTabIds.push(id);
     this._selectTab(id instanceof SliderSuperTab ? id.container : id);
     return true;
   }

@@ -80,6 +80,7 @@ import showAccountsLimitPopup from '@components/sidebarLeft/accountsLimitPopup';
 import {changeAccount} from '@lib/accounts/changeAccount';
 import uiNotificationsManager from '@lib/uiNotificationsManager';
 import {renderFoldersSidebarContent} from '@components/sidebarLeft/foldersSidebarContent';
+import {renderSocialNav, SocialNavItemOptions} from '@components/socialNav';
 import SolidJSHotReloadGuardProvider from '@lib/solidjs/hotReloadGuardProvider';
 import {AppChatFoldersTab} from '@components/solidJsTabs/tabs';
 import {SliderSuperTabConstructable} from '@components/sliderTab';
@@ -95,11 +96,15 @@ import createSubmenuTrigger, {CreateSubmenuArgs} from '@components/createSubmenu
 import ChatTypeMenu from '@components/chatTypeMenu';
 import {RequestHistoryOptions} from '@appManagers/appMessagesManager';
 import EmptySearchPlaceholder from '@components/emptySearchPlaceholder';
-import useHasFoldersSidebar, {
+import {
   useIsSidebarCollapsed,
   useHasOpenLeftTabs,
   useIsLeftSearchActive,
-  useFoldersSidebarShown
+  useLeftRailShown,
+  useSocialSection,
+  useIsCenterSection,
+  useSocialNavShown,
+  SocialSection
 } from '@stores/foldersSidebar';
 import isObject from '@helpers/object/isObject';
 import {useAppSettings} from '@stores/appSettings';
@@ -185,6 +190,7 @@ export class AppSidebarLeft extends SidebarSlider {
       SolidJSHotReloadGuardProvider,
       mainMiddleware
     );
+    this.renderSocialNav();
 
     // If it has z-index to early, the browser makes it shift a few times before showing it properly in its position (on very large screens)
     // Doesn't solve the blinking, which doesn't seem to appear when the project is built
@@ -408,12 +414,12 @@ export class AppSidebarLeft extends SidebarSlider {
     // be shown. The CSS only reads that class, no body/parent-selector
     // cascades.
     createRoot(() => {
-      const [hasFoldersSidebar] = useHasFoldersSidebar();
+      const [leftRailShown] = useLeftRailShown();
       const [isCollapsed] = useIsSidebarCollapsed();
       const [hasOpenLeftTabs] = useHasOpenLeftTabs();
       createEffect(() => {
         const visible =
-          hasFoldersSidebar() &&
+          leftRailShown() &&
           isCollapsed() &&
           !hasOpenLeftTabs();
         this.searchTriggerWhenCollapsed.classList.toggle('is-visible', visible);
@@ -427,20 +433,21 @@ export class AppSidebarLeft extends SidebarSlider {
     // icon's `.state-back` (which shape it renders as). They all flow from
     // the same condition, so a single Solid effect owns the truth:
     //
-    //   showBack = useFoldersSidebarShown OR useIsLeftSearchActive
+    //   showBack = useLeftRailShown OR useIsLeftSearchActive
     //
-    // When the folders panel is actually shown it has its own menu trigger, so
-    // the in-sidebar burger never serves as a menu — it stays in back state
-    // regardless of search activity. NOTE: gate on the viewport-aware *shown*
-    // value, not the raw useHasFoldersSidebar preference — below 925px the panel
-    // is hidden (its menu trigger with it), so the burger MUST fall back to the
-    // menu icon. Without the panel shown, back state follows search activity.
+    // When a left rail (the folders panel or the social navigation) is
+    // actually shown it has its own menu trigger, so the in-sidebar burger
+    // never serves as a menu — it stays in back state regardless of search
+    // activity. NOTE: gate on the viewport-aware *shown* value, not the raw
+    // useHasFoldersSidebar preference — below 925px the rail is hidden (its
+    // menu trigger with it), so the burger MUST fall back to the menu icon.
+    // Without a rail shown, back state follows search activity.
     createRoot(() => {
-      const [foldersSidebarShown] = useFoldersSidebarShown();
+      const [leftRailShown] = useLeftRailShown();
       const [isLeftSearchActive] = useIsLeftSearchActive();
       const animatedMenuIcon = this.buttonsContainer.firstElementChild as HTMLElement;
       createEffect(() => {
-        const showBack = foldersSidebarShown() || isLeftSearchActive();
+        const showBack = leftRailShown() || isLeftSearchActive();
         this.toolsBtn.classList.toggle('is-visible', !showBack);
         this.backBtn.classList.toggle('is-visible', showBack);
         animatedMenuIcon.classList.toggle('state-back', showBack);
@@ -453,6 +460,15 @@ export class AppSidebarLeft extends SidebarSlider {
     });
 
     this.initSidebarResize();
+
+    // ...and the other way round: a chat opened from a section (a contact,
+    // Saved Messages) leaves the section so the chat is what shows.
+    appImManager.addEventListener('peer_changed', ({peerId}) => {
+      if(peerId && useIsCenterSection()[0]()) {
+        this.closeEverythingInside();
+      }
+    });
+
     appDialogsManager.onSomeDrawerToggle = () => {
       this.onSomethingOpenInsideChange();
     };
@@ -509,9 +525,9 @@ export class AppSidebarLeft extends SidebarSlider {
     appDialogsManager.xd.toggleAvatarUnreadBadges(this.isCollapsed(), undefined);
     appDialogsManager.onChatListNarrowChange();
 
-    const [hasFoldersSidebar] = useHasFoldersSidebar();
+    const [leftRailShown] = useLeftRailShown();
 
-    if(canShowCtrlFTip && this.isCollapsed() && !hasFoldersSidebar()) {
+    if(canShowCtrlFTip && this.isCollapsed() && !leftRailShown()) {
       this.showCtrlFTip();
     }
 
@@ -547,6 +563,24 @@ export class AppSidebarLeft extends SidebarSlider {
   }
 
   private isAnimatingCollapse = false;
+  // The section of the social navigation shown: the one whose tab is at the
+  // bottom of the open stack (tabs opened on top of it stay in it), else the
+  // chat list. Tabs no section owns (archive, a new group…) are the chat list's.
+  private getSocialSection(): SocialSection {
+    const rootTab = this.hasTabsInNavigation() && this.getHistory()[0];
+    if(rootTab) {
+      const sections: [SocialSection, SliderSuperTabConstructable][] = [
+        ['contacts', AppContactsTab],
+        ['calls', AppCallsTab],
+        ['stories', AppMyStoriesTab],
+        ['settings', AppSettingsTab]
+      ];
+      return sections.find(([, ctor]) => rootTab instanceof ctor)?.[0] ?? 'messages';
+    }
+
+    return this.isSearchActive ? 'search' : 'messages';
+  }
+
   private onSomethingOpenInsideChange = (force = false) => {
     const wasFloating = this.sidebarEl.classList.contains('has-open-tabs');
     const isFloating = force || this.hasSomethingOpenInside();
@@ -562,6 +596,12 @@ export class AppSidebarLeft extends SidebarSlider {
       appDialogsManager.forumTab.container.inert = hasRealTabs;
     }
     useHasOpenLeftTabs()[1](isFloating);
+    useSocialSection()[1](this.getSocialSection());
+    // A section shown in place of the chat replaces it: close the chat rather
+    // than leave it open (and in the URL) behind the section.
+    if(useIsCenterSection()[0]()) {
+      appImManager.closeAllChats();
+    }
 
     // Keep the pop-out flag in sync with the actual tabs state regardless of
     // the early-return paths below. If we only set it inside the
@@ -673,7 +713,11 @@ export class AppSidebarLeft extends SidebarSlider {
     });
   }
 
-  public createToolsMenu(mountTo?: HTMLElement, positionPadding?: Parameters<typeof ButtonMenuToggle>[0]['positionPadding']) {
+  public createToolsMenu(
+    mountTo?: HTMLElement,
+    positionPadding?: Parameters<typeof ButtonMenuToggle>[0]['positionPadding'],
+    direction: Parameters<typeof ButtonMenuToggle>[0]['direction'] = 'bottom-right'
+  ) {
     const closeTabsBefore = async(clb: () => void) => {
       this.closeEverythingInside() && await pause(200);
 
@@ -779,7 +823,7 @@ export class AppSidebarLeft extends SidebarSlider {
     const filteredButtons = menuButtons.filter(Boolean);
     const filteredButtonsSliced = filteredButtons.slice();
     const buttonMenuToggle = ButtonMenuToggle({
-      direction: 'bottom-right',
+      direction,
       buttons: filteredButtons,
       container: mountTo,
       buttonOptions: {ariaLabel: 'MultiAccount.More'},
@@ -1117,6 +1161,60 @@ export class AppSidebarLeft extends SidebarSlider {
       text: singular ? 'PrivateChat' : 'NewPrivateChat',
       onClick: onContactsClick
     }];
+  }
+
+  private renderSocialNav() {
+    const items: SocialNavItemOptions[] = [{
+      section: 'messages',
+      icon: 'message',
+      text: 'SocialNav.Messages',
+      unreadBadge: true,
+      onClick: () => this.closeEverythingInside()
+    }, {
+      section: 'search',
+      icon: 'search',
+      text: 'Search',
+      onClick: () => this.closeTabsBefore(() => this.initSearch().open())
+    }, {
+      section: 'contacts',
+      icon: 'user',
+      text: 'Contacts',
+      onClick: () => this.closeTabsBefore(() => this.createTab(AppContactsTab).open())
+    }, (IS_CALL_SUPPORTED || IS_CONFERENCE_CALL_SUPPORTED) && {
+      section: 'calls',
+      icon: 'phone',
+      text: 'Calls',
+      onClick: () => this.closeTabsBefore(() => this.createTab(AppCallsTab).open())
+    }, !TEST_NO_STORIES && {
+      section: 'stories',
+      icon: 'stories',
+      text: 'MyStories.Title',
+      onClick: () => this.closeTabsBefore(() => this.createTab(AppMyStoriesTab).open(AppMyStoriesTab.getInitArgs()))
+    }, {
+      icon: 'savedmessages',
+      text: 'SavedMessages',
+      onClick: () => appImManager.setPeer({peerId: appImManager.myId})
+    }, {
+      section: 'settings',
+      icon: 'settings',
+      text: 'Settings',
+      onClick: () => this.closeTabsBefore(() => this.createTab(AppSettingsTab).open())
+    }];
+
+    renderSocialNav(document.getElementById('main-columns'), {
+      items: items.filter(Boolean),
+      mountComposeMenu: (el) => {
+        ButtonMenuToggle({
+          direction: 'top-right',
+          buttons: this.createNewChatsMenuOptions(true),
+          container: el,
+          buttonOptions: {ariaLabel: 'ChatAutomation.NewChats'}
+        });
+      },
+      mountAccountMenu: (el) => {
+        this.createToolsMenu(el, {bottom: 8}, 'top-right');
+      }
+    }, this.middlewareHelper.get());
   }
 
   private createNewChatsMenuButton() {
@@ -1753,7 +1851,13 @@ export class AppSidebarLeft extends SidebarSlider {
     doNotAppend?: boolean
   ) {
     const ctorsToOpenInPopup = [AppSettingsTab, AppEditFolderTab, AppChatFoldersTab]
-    if(this.isCollapsed() && !mediaSizes.isLessThanFloatingLeftSidebar && ctorsToOpenInPopup.includes(ctor as any)) {
+    // with the social navigation docked settings open in the centre, not in a popup
+    if(
+      this.isCollapsed() &&
+      !mediaSizes.isLessThanFloatingLeftSidebar &&
+      !useSocialNavShown()[0]() &&
+      ctorsToOpenInPopup.includes(ctor as any)
+    ) {
       const slider = showSettingsSliderPopup(this.managers);
       return slider.createTab(ctor, destroyable, doNotAppend);
     }

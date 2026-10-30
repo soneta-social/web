@@ -32,6 +32,12 @@ export type InstallColumnResizeOptions = {
   preventCollapse?: () => boolean;
   /** Side-effect to run on every swipe tick (after width is updated). */
   onSwipeTick?: () => void;
+  /**
+   * Takes the dragged width instead of the column width preferences — for a
+   * column that is not one of the two sidebars (the social navigation). No
+   * Shift lock-step then.
+   */
+  onResize?: (width: number) => void;
 };
 
 /**
@@ -41,7 +47,7 @@ export type InstallColumnResizeOptions = {
  * column is resized in lock-step with the dragged one.
  */
 export default function installColumnResize(opts: InstallColumnResizeOptions): void {
-  const {columnEl, side, isCollapsed, setCollapsed, onCollapsedChange, preventCollapse, onSwipeTick} = opts;
+  const {columnEl, side, isCollapsed, setCollapsed, onCollapsedChange, preventCollapse, onSwipeTick, onResize} = opts;
   const otherBodyClass = side === 'left' ? 'resizing-left-sidebar' : 'resizing-right-sidebar';
 
   const handle = document.createElement('div');
@@ -54,7 +60,7 @@ export default function installColumnResize(opts: InstallColumnResizeOptions): v
     onStart: () => {
       handle.classList.add('is-active');
       document.body.classList.add(otherBodyClass);
-      if(!appSettings.seenTooltips.sidebarResize) {
+      if(!onResize && !appSettings.seenTooltips.sidebarResize) {
         setAppSettings('seenTooltips', 'sidebarResize', true);
         toastNew({langPackKey: 'Sidebar.Resize.ShiftTip'});
       }
@@ -70,7 +76,9 @@ export default function installColumnResize(opts: InstallColumnResizeOptions): v
 
       const isShift = (e as MouseEvent).shiftKey === true;
 
-      if(side === 'left') {
+      if(onResize) {
+        onResize(rawWidth);
+      } else if(side === 'left') {
         const wasCollapsed = !!isCollapsed?.();
         const collapsed = !preventCollapse?.() && rawWidth < MIN_SIDEBAR_WIDTH * SIDEBAR_COLLAPSE_FACTOR;
         setUserPreferredLeft(collapsed ? 0 : rawWidth);
